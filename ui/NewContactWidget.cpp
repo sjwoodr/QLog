@@ -2939,7 +2939,17 @@ void NewContactWidget::prepareWSJTXQSO(const QString &receivedCallsign,
 
     callsign = receivedCallsign;
     ui->callsignEdit->setText(receivedCallsign);
-    uiDynamic->gridEdit->setText(grid);
+
+    // WSJT-X packets with "XXXX" as a grid:
+    // We should trigger callbook lookup but not persist XXXX in the UI
+    bool shouldTriggerCallbookLookup = (grid == "XXXX");
+    QString gridToUse = shouldTriggerCallbookLookup ? QString() : grid;
+
+    if ( !gridToUse.isEmpty() )
+    {
+        uiDynamic->gridEdit->setText(gridToUse);
+    }
+
     checkDupe();
     setDxccInfo(receivedCallsign);
     queryPota();
@@ -2951,9 +2961,10 @@ void NewContactWidget::prepareWSJTXQSO(const QString &receivedCallsign,
     // 1) prev Callsign empty grid
     // 2) new Callsign empty grid
     // 3) new Calllsign, new gris
-    if ( !grid.isEmpty() )
+    // If grid is "XXXX", treat it as a trigger to perform callbook lookup
+    if ( !gridToUse.isEmpty() || shouldTriggerCallbookLookup )
     {
-        useFieldsFromPrevQSO(callsign, grid);
+        useFieldsFromPrevQSO(callsign, gridToUse);
         finalizeCallsignEdit();
     }
 }
