@@ -19,6 +19,7 @@ QLOG_PORT = 2237      # QLog listens on this port
 LISTEN_IP = '0.0.0.0'
 BROADCAST_IP = '127.0.0.1'
 SOURCE_PORT = 52946   # Match WSJT-X source port
+MY_GRID = "EL96"
 
 # WSJT-X binary protocol constants
 MAGIC = 0xadbccbda
@@ -316,7 +317,7 @@ class WriteLogConverter:
         call = qso.get('call', '').upper()
         fields.append(f"<call:{len(call)}>{call}")
 
-        # Grid square (include even if placeholder AA00)
+        # Grid square (include even if placeholder XXXX)
         dx_grid = qso_data.get('dx_grid', '')
         if dx_grid:
             fields.append(f"<gridsquare:{len(dx_grid)}>{dx_grid}")
@@ -419,18 +420,16 @@ class WriteLogConverter:
         # - WSJT-X Status packets populate fields via prepareWSJTXQSO() but may not call finalization
         # - Testing confirmed: empty DX grid = no lookup; any grid value = lookup triggered
         #
-        # Why AA00?
+        # Why XXXX?
         # - Triggers QLog to call CallbookManager.queryCallsign() and fetch name/QTH from QRZ
-        # - QLog will save AA00 as the grid (not ideal, but acceptable tradeoff)
+        # - QLog will save XXXX as the grid (not ideal, but acceptable tradeoff)
         # - User can bulk-update grids in QLog later if needed (Edit > Replace)
-        # - Alternative would be to not auto-log (just show in QLog for manual confirmation)
-        #
+
         if not dx_grid:
-            dx_grid = "AA00"  # Minimal placeholder - Atlantic Ocean, triggers QRZ lookup
+            dx_grid = "XXXX"  # Minimal placeholder - Atlantic Ocean, triggers QRZ lookup
 
         qso_data['dx_grid'] = dx_grid
-        # Use my grid from WriteLog mycall location, or default to EL96 (adjust for your QTH)
-        qso_data['my_grid'] = "EL96"  # TODO: Configure your grid square here
+        qso_data['my_grid'] = MY_GRID
 
         # Timestamp
         qso_date, time_on, timestamp_ms = self.convert_timestamp(qso.get('timestamp', ''))
